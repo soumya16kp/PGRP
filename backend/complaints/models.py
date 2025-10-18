@@ -1,9 +1,15 @@
 from django.db import models
 from django.contrib.auth.models import User
 from account.models import Municipality 
+from datetime import datetime, timezone
 
+class ComplaintManager(models.Manager):
+    def ranked(self):
+        complaints = list(self.all())
+        complaints.sort(key=lambda c: c.score, reverse=True)
+        return complaints
 class Complaint(models.Model):
-
+    
     DEPARTMENTS = [
         ("Water", "Water Department"),
         ("Electricity", "Electricity Department"),
@@ -44,14 +50,25 @@ class Complaint(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     upvotes = models.ManyToManyField(User, related_name='upvoted_complaints', blank=True)
     priority = models.DecimalField(max_digits=3, decimal_places=2, default=0.5)
-
+    
+    objects = ComplaintManager()
 
     def total_upvotes(self):
         return self.upvotes.count()
 
+    def delay_days(self):
+        delta = datetime.now(timezone.utc) - self.created_at
+        return delta.days + (delta.seconds / 86400)
+
+    @property
+    def score(self):
+        upvotes = self.total_upvotes()
+        delay = self.delay_days()
+        return (float(self.priority) * 0.5) + (upvotes * 0.3) - (delay * 0.02)
+
     def __str__(self):
         return f"{self.topic} ({self.department}) - {self.status}"
-
+    
 
 class Comment(models.Model):
     complaint = models.ForeignKey(Complaint, on_delete=models.CASCADE, related_name='comments')

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import {
   MapPin,
@@ -10,15 +10,38 @@ import {
   MessageCircle,
   ShieldCheck,
 } from "lucide-react";
+import complaintService from "../services/complaintService"; // import service
 import "./Home.css";
 
 export default function HomePage() {
-  const trendingIssues = [
-    { topic: "Pothole near Jaydev Vihar", status: "Pending", department: "Roads" },
-    { topic: "Water leakage in Unit-9", status: "In Progress", department: "Water" },
-    { topic: "Garbage not collected", status: "Resolved", department: "Sanitation" },
-  ];
+  const [trendingIssues, setTrendingIssues] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loading, setLoading] = useState(false);
 
+  // Fetch ranked complaints from backend
+  const loadTrendingIssues = async () => {
+    try {
+      setLoading(true);
+      const data = await complaintService.getRankedComplaints(page);
+
+      if (data.results.length === 0) {
+        setHasMore(false);
+      } else {
+        setTrendingIssues((prev) => [...prev, ...data.results]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch trending issues:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadTrendingIssues();
+  }, [page]);
+
+  // Static data for Features and Screenshots (unchanged)
   const features = [
     {
       icon: <MapPin size={32} />,
@@ -62,13 +85,6 @@ export default function HomePage() {
     },
   ];
 
-  const screenshots = [
-    "/images/dashboard.png",
-    "/images/map.png",
-    "/images/complaint_form.png",
-    "/images/analytics.png",
-  ];
-
   return (
     <div className="homepage-container">
       {/* 🌆 HERO SECTION */}
@@ -94,21 +110,38 @@ export default function HomePage() {
       {/* 🔥 TRENDING ISSUES */}
       <section className="trending-section">
         <h2>🔥 Trending Issues</h2>
-        <div className="trending-list">
-          {trendingIssues.map((issue, i) => (
+        <div className="trending-list grid grid-cols-1 md:grid-cols-2 gap-4">
+          {trendingIssues.map((issue) => (
             <motion.div
-              key={i}
-              className="trending-card"
+              key={issue.id}
+              className="trending-card p-4 border rounded-lg shadow-sm hover:shadow-md transition-all"
               whileHover={{ scale: 1.03 }}
               transition={{ type: "spring", stiffness: 200 }}
             >
-              <h4>{issue.topic}</h4>
-              <p>
+              <h4 className="font-semibold">{issue.topic}</h4>
+              <p className="text-sm text-gray-600 mt-1">
                 <b>Department:</b> {issue.department} | <b>Status:</b> {issue.status}
+              </p>
+              <p className="text-sm text-gray-500 mt-1">
+                ⬆️ Upvotes: {issue.total_upvotes} | 🔥 Score: {issue.score}
               </p>
             </motion.div>
           ))}
         </div>
+
+        {hasMore && !loading && (
+          <div className="text-center mt-6">
+            <button
+              onClick={() => setPage((p) => p + 1)}
+              className="px-6 py-2 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition"
+            >
+              Load More
+            </button>
+          </div>
+        )}
+
+        {loading && <p className="text-center text-gray-500 mt-4">Loading...</p>}
+        {!hasMore && !loading && <p className="text-center text-gray-400 mt-4">No more trending issues.</p>}
       </section>
 
       {/* 🧭 HOW IT WORKS */}
@@ -145,23 +178,6 @@ export default function HomePage() {
               <h4>{f.title}</h4>
               <p>{f.desc}</p>
             </motion.div>
-          ))}
-        </div>
-      </section>
-
-      {/* 🖼️ PROJECT SCREENSHOTS */}
-      <section className="screenshots-section">
-        <h2>📸 Project Screenshots</h2>
-        <div className="screenshots-grid">
-          {screenshots.map((src, i) => (
-            <motion.img
-              key={i}
-              src={src}
-              alt={`screenshot-${i}`}
-              className="screenshot-img"
-              whileHover={{ scale: 1.04 }}
-              transition={{ duration: 0.3 }}
-            />
           ))}
         </div>
       </section>

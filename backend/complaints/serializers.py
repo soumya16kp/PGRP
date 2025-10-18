@@ -24,3 +24,24 @@ class ComplaintSerializer(serializers.ModelSerializer):
             'status', 'created_at', 'updated_at', 'total_upvotes', 'comments','priority'
         ]
         read_only_fields = ['user', 'status', 'created_at', 'updated_at', 'total_upvotes', 'comments']
+        
+class RankedComplaintSerializer(serializers.ModelSerializer):
+    user = serializers.StringRelatedField(read_only=True)
+    total_upvotes = serializers.SerializerMethodField()
+    score = serializers.SerializerMethodField()
+    comments = CommentSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Complaint
+        fields = [
+            'id', 'user', 'municipality', 'department', 'topic',
+            'description', 'location', 'latitude', 'longitude',
+            'media', 'status', 'created_at', 'updated_at',
+            'priority', 'total_upvotes', 'score', 'comments'
+        ]
+
+    def get_total_upvotes(self, obj):
+        return obj.total_upvotes()
+
+    def get_score(self, obj):
+        return round(obj.score, 3)
