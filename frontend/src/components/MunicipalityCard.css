@@ -1,0 +1,38 @@
+.municipality-card {
+  background-color: #fff;
+  border: 1px solid #ddd;
+  border-radius: 12px;
+  width: 300px;
+  padding: 16px;
+  margin: 12px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.municipality-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.municipality-header {
+  border-bottom: 1px solid #eee;
+  padding-bottom: 8px;
+  margin-bottom: 10px;
+}
+
+.municipality-header h2 {
+  font-size: 1.4rem;
+  color: #2a4d69;
+  margin: 0;
+}
+
+.municipality-body p {
+  font-size: 0.95rem;
+  color: #333;
+  margin: 4px 0;
+}
+
+.municipality-body strong {
+  color: #2a4d69;
+}

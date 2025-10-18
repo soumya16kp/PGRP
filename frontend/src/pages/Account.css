@@ -1,0 +1,238 @@
+/* Account.css */
+.account-container {
+  max-width: 600px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  position: relative;
+}
+
+.account-title {
+  color: #333;
+  font-size: 2rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 1rem;
+}
+
+/* Edit button styles */
+.edit-btn {
+  position: absolute;
+  top: 2rem;
+  right: 2rem;
+  cursor: pointer;
+  font-size: 1.2rem;
+  color: #666;
+  transition: color 0.3s ease;
+}
+
+.edit-btn:hover {
+  color: #333;
+}
+
+.edit-options {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  padding: 0.5rem 0;
+  min-width: 140px;
+  z-index: 10;
+}
+
+.edit-options button {
+  display: block;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #333;
+  transition: background-color 0.2s ease;
+}
+
+.edit-options button:hover {
+  background-color: #f5f5f5;
+}
+
+.edit-options button:first-child {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Profile image */
+.profile-img {
+  display: block;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0 auto 2rem auto;
+  border: 4px solid #f0f0f0;
+}
+
+/* Account info styles */
+.account-info {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.account-info p {
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #e9ecef;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.account-info p:last-child {
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.account-info strong {
+  color: #333;
+  font-weight: 600;
+  display: inline-block;
+  min-width: 120px;
+}
+
+/* Logout button */
+.logout-btn {
+  display: block;
+  width: 100%;
+  padding: 0.75rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-top: 1rem;
+}
+
+.logout-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Form popup styles */
+.account-form-popup {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.account-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  position: relative;
+}
+
+.edit-title {
+  color: #333;
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.close-btn {
+  position: absolute;
+  top: 1rem;
+  right: 1.5rem;
+  font-size: 1.5rem;
+  cursor: pointer;
+  color: #666;
+  transition: color 0.3s ease;
+}
+
+.close-btn:hover {
+  color: #333;
+}
+
+/* Loading and error states */
+.loading, .no-user {
+  text-align: center;
+  font-size: 1.1rem;
+  color: #666;
+  margin: 2rem;
+  padding: 2rem;
+}
+
+.loading {
+  color: #667eea;
+}
+
+.no-user {
+  color: #dc3545;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .account-container {
+    margin: 1rem;
+    padding: 1.5rem;
+  }
+  
+  .account-title {
+    font-size: 1.5rem;
+  }
+  
+  .edit-btn {
+    top: 1.5rem;
+    right: 1.5rem;
+  }
+  
+  .profile-img {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .account-info {
+    padding: 1rem;
+  }
+  
+  .account-info strong {
+    min-width: 100px;
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .account-container {
+    margin: 0.5rem;
+    padding: 1rem;
+  }
+  
+  .account-form {
+    padding: 1.5rem;
+  }
+  
+  .close-btn {
+    top: 0.5rem;
+    right: 1rem;
+  }
+}
