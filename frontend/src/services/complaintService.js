@@ -52,6 +52,14 @@ const updateStatus = async (complaintId, newStatus) => {
   return response.data;
 };
 
+const getRankedComplaints = async (page = 1) => {
+  const response = await apiClient.get(`${BASE_URL}ranked/`, {
+    params: { page },
+  });
+  return response.data;
+};
+
+
 const complaintService = {
   getComplaints,
   getComplaintById,
@@ -59,6 +67,7 @@ const complaintService = {
   addComment,
   toggleUpvote,
   updateStatus,
+  getRankedComplaints,
 };
 
 export default complaintService;

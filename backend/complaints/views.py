@@ -1,4 +1,5 @@
 import os
+from rest_framework.views import APIView
 from rest_framework import generics
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
@@ -7,7 +8,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import Complaint, Comment
 from account.models import Municipality
 from django.shortcuts import get_object_or_404
-from .serializers import ComplaintSerializer, CommentSerializer
+from .serializers import ComplaintSerializer, CommentSerializer,RankedComplaintSerializer
 from openai import OpenAI
 
 
@@ -105,3 +106,31 @@ class ComplaintViewSet(viewsets.ModelViewSet):
         comments = complaint.comments.all().order_by('-created_at')
         serializer = CommentSerializer(comments, many=True)
         return Response(serializer.data)
+
+class RankedComplaintListView(APIView):
+    """
+    Returns top complaints ranked by score (priority + upvotes - delay)
+    Paginated dynamically with 8 complaints per fetch
+    """
+
+    def get(self, request):
+        # 1️⃣ Get ranked complaints using custom manager
+        all_complaints = Complaint.objects.ranked()
+
+        # 2️⃣ Handle pagination manually
+        page = int(request.query_params.get('page', 1))
+        per_page = 8
+        start = (page - 1) * per_page
+        end = start + per_page
+        paginated = all_complaints[start:end]
+
+        # 3️⃣ Serialize with RankedComplaintSerializer
+        serializer = RankedComplaintSerializer(paginated, many=True)
+
+        # 4️⃣ Return paginated response
+        return Response({
+            "page": page,
+            "total": len(all_complaints),
+            "count": len(paginated),
+            "results": serializer.data
+        }, status=status.HTTP_200_OK)
