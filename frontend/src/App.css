@@ -1,0 +1,64 @@
+@import url('https://unpkg.com/leaflet/dist/leaflet.css');
+
+
+
+/* Basic structure adjustments */
+.app-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Base dot grid */
+.dot-grid {
+  background-color: #f8fafc; /* subtle light base */
+  background-image: radial-gradient(circle, rgba(203, 213, 225, 0.6) 1px, transparent 1px);
+  background-size: 28px 28px; /* slightly smaller spacing */
+  position: relative;
+  overflow: hidden;
+}
+
+/* Floating gradient circles overlay */
+.dot-grid::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: 
+    radial-gradient(circle at 25% 75%, rgba(99, 102, 241, 0.08) 0%, transparent 60%),
+    radial-gradient(circle at 80% 20%, rgba(236, 72, 153, 0.07) 0%, transparent 60%),
+    radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Optional subtle animation for floating effect */
+.dot-grid::after {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(255,255,255,0.05) 1%, transparent 5%);
+  background-size: 50px 50px;
+  animation: floatDots 20s linear infinite;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes floatDots {
+  0% { transform: translate(0, 0); }
+  50% { transform: translate(20px, 20px); }
+  100% { transform: translate(0, 0); }
+}
+
+/* Green variant */
+.dot-grid.green {
+  background-color: #f0fdf4;
+  background-image: radial-gradient(circle, rgba(143, 216, 168, 0.6) 1px, transparent 1px);
+}
+
+

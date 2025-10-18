@@ -1,0 +1,110 @@
+/* Import a professional font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap');
+
+.login-container {
+    max-width: 400px;
+    margin: 80px auto;
+    padding: 2rem;
+    background: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    font-family: 'Inter', sans-serif;
+}
+
+.login-container h2 {
+    margin-bottom: 10px;
+    font-size: 26px;
+    font-weight: 600;
+    color: #222;
+}
+
+.login-container p {
+    font-size: 15px;
+    color: #666;
+    margin-bottom: 15px;
+}
+
+.login-container p a {
+    color: #007bff;
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+.login-container p a:hover {
+    color: #0056b3;
+    text-decoration: underline;
+}
+
+.error-message {
+    color: #d9534f;
+    background: #fdecea;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    font-weight: 500;
+}
+
+/* Form Styling */
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.input-group {
+    text-align: left;
+}
+
+.input-group label {
+    display: block;
+    font-weight: 500;
+    margin-bottom: 5px;
+    color: #333;
+    font-size: 14px;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-family: 'Inter', sans-serif;
+    transition: border-color 0.3s ease-in-out;
+}
+
+.input-group input:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.2);
+}
+
+/* Login Button */
+.login-button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    color: #fff;
+    background: #007bff;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background 0.3s ease-in-out, transform 0.2s;
+    font-family: 'Inter', sans-serif;
+}
+
+.login-button:hover {
+    background: #0056b3;
+    transform: scale(1.02);
+}
+
+/* Responsive Design */
+@media (max-width: 480px) {
+    .login-container {
+        width: 90%;
+        padding: 1.5rem;
+    }
+}
