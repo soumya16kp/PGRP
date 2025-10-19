@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
-from account.models import Municipality 
+from account.models import Municipality
+from django.utils import timezone
+
 
 class Complaint(models.Model):
 
@@ -40,8 +42,8 @@ class Complaint(models.Model):
     longitude = models.DecimalField(max_digits=20, decimal_places=15 )
     media = models.FileField(upload_to='complaint_media/', null=True, blank=True)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(default=timezone.now)
     upvotes = models.ManyToManyField(User, related_name='upvoted_complaints', blank=True)
     priority = models.DecimalField(max_digits=3, decimal_places=2, default=0.5)
 
