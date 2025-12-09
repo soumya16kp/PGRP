@@ -12,25 +12,41 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 import os
+
 from dotenv import load_dotenv
 load_dotenv()
 
+from environ import Env 
+env= Env()
+Env.read_env()
+
+ENVIRONMENT = env ('ENVIRONMENT', default="production")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_URL = '/media/'
+if ENVIRONMENT=='development':
+    MEDIA_ROOT=BASE_DIR/'media'
+else:
+    DEFALUT_FILE_STORAGE='cloudinary_storage.storage.MediaCloudinaryStorage'
+    CLOUDINARY_STORAGE={
+        'CLOUDINARY_URL': env('CLOUDINARY_URL')
+    }
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-gl9rx5sk!v*j75yo9!1y4^o&#$4&gv2i%dk&xy4bzt&&9x7^yl'
+SECRET_KEY =env('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+if ENVIRONMENT=='development':
+    DEBUG = True
+else:
+    DEBUG=False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
+ALLOWED_HOSTS = ["localhost", "127.0.0.1",'*']
 
 
 # Application definition
@@ -44,6 +60,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'account',
     'api',
+    'cloudinary',
     'complaints',
     'corsheaders',
     'rest_framework',
@@ -59,6 +76,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
 ]
 
 ROOT_URLCONF = 'backend.urls'
@@ -83,13 +101,19 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+if ENVIRONMENT=='development':
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
     }
-}
+
+else:
+    import dj_database_url
+    DATABASES={
+        'default':dj_database_url.parse(env('DATABASE_URL'))
+    }
 
 
 # Password validation
@@ -117,7 +141,7 @@ CORS_ALLOW_HEADERS = list(default_headers) + ['Authorization']
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",          # for dev
-    "https://your-frontend-domain.com",  # for production
+    "https://pgrp.vercel.app/"  # for production
 ]
 
 REST_FRAMEWORK = {
