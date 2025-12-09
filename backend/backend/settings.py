@@ -25,6 +25,7 @@ ENVIRONMENT = env ('ENVIRONMENT', default="production")
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_URL = '/media/'
+
 if ENVIRONMENT=='development':
     MEDIA_ROOT=BASE_DIR/'media'
 else:
@@ -139,9 +140,13 @@ CORS_ALLOW_CREDENTIALS = True
 from corsheaders.defaults import default_headers
 CORS_ALLOW_HEADERS = list(default_headers) + ['Authorization']
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://pgrp.vercel.app",
+]
+
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",          # for dev
-    "https://pgrp.vercel.app/"  # for production
+    "https://pgrp.vercel.app"  # for production
 ]
 
 REST_FRAMEWORK = {
