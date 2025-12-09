@@ -29,7 +29,7 @@ MEDIA_URL = '/media/'
 if ENVIRONMENT=='development':
     MEDIA_ROOT=BASE_DIR/'media'
 else:
-    DEFALUT_FILE_STORAGE='cloudinary_storage.storage.MediaCloudinaryStorage'
+    DEFAULT_FILE_STORAGE='cloudinary_storage.storage.MediaCloudinaryStorage'
     CLOUDINARY_STORAGE={
         'CLOUDINARY_URL': env('CLOUDINARY_URL')
     }
@@ -47,7 +47,7 @@ if ENVIRONMENT=='development':
 else:
     DEBUG=False
 
-ALLOWED_HOSTS = ["localhost", "127.0.0.1",'https://pgrp-backend.onrender.com/']
+ALLOWED_HOSTS = ["localhost", "127.0.0.1", "pgrp-backend.onrender.com"]
 
 
 # Application definition
