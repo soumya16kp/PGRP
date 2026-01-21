@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from account.models import Municipality 
 from datetime import datetime, timezone
+from api.models import MunicipalityOfficial
 
 class ComplaintManager(models.Manager):
     def ranked(self):
@@ -78,3 +79,26 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.user.username} on {self.complaint.topic}"
+
+
+
+class ComplaintActivity(models.Model):
+
+    complaint = models.ForeignKey(
+        'Complaint', 
+        on_delete=models.CASCADE, 
+        related_name="activities"
+    )
+    updated_by = models.ForeignKey(
+        'api.MunicipalityOfficial', 
+        on_delete=models.SET_NULL, 
+        null=True,
+        related_name="actions"
+    )
+    previous_status = models.CharField(max_length=50, choices=Complaint.STATUS_CHOICES)
+    new_status = models.CharField(max_length=50, choices=Complaint.STATUS_CHOICES)
+    remarks = models.TextField(blank=True, null=True) # Optional note from official
+    updated_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.complaint.id}: {self.previous_status} -> {self.new_status} by {self.updated_by}"

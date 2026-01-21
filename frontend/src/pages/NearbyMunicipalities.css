@@ -1,60 +1,448 @@
-.municipality-page {
+/* NearbyMunicipalities.css - Scoped with nm- prefix */
+
+.nearby-municipalities-scope {
+  /* Scoping wrapper - intentionally empty */
+}
+
+.nearby-municipalities-scope .nm-page {
+  min-height: 100vh;
+  padding: 2rem;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Header */
+.nearby-municipalities-scope .nm-header {
+  max-width: 1200px;
+  margin: 0 auto 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.nearby-municipalities-scope .nm-header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.nearby-municipalities-scope .nm-header-icon {
+  color: #059669;
+}
+
+.nearby-municipalities-scope .nm-title {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0;
+}
+
+.nearby-municipalities-scope .nm-subtitle {
+  color: #6b7280;
+  margin: 0.25rem 0 0;
+  font-size: 0.95rem;
+}
+
+.nearby-municipalities-scope .nm-badge {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  padding: 0.5rem 1.25rem;
+  border-radius: 20px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+/* Grid */
+.nearby-municipalities-scope .nm-grid {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 2rem;
-  font-family: "Poppins", sans-serif;
-}
-
-.page-title {
-  text-align: center;
-  font-size: 2rem;
-  font-weight: 600;
-  margin-bottom: 2rem;
-  color: #333;
-}
-
-.municipality-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   gap: 1.5rem;
 }
 
-.municipality-card {
-  background: #ffffff;
+/* Card */
+.nearby-municipalities-scope .nm-card {
+  background: white;
   border-radius: 16px;
   padding: 1.5rem;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+  border: 1px solid #f3f4f6;
   cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
 }
 
-.municipality-card:hover {
+.nearby-municipalities-scope .nm-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 4px;
+  background: linear-gradient(90deg, #10b981, #059669);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.nearby-municipalities-scope .nm-card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 15px 30px rgba(5, 150, 105, 0.12);
+  border-color: #d1fae5;
 }
 
-.municipality-card h3 {
-  font-size: 1.25rem;
+.nearby-municipalities-scope .nm-card:hover::before {
+  opacity: 1;
+}
+
+/* Card Top */
+.nearby-municipalities-scope .nm-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.nearby-municipalities-scope .nm-card-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #ecfdf5, #d1fae5);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #059669;
+}
+
+.nearby-municipalities-scope .nm-refetch-btn {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.5rem;
+  cursor: pointer;
+  color: #6b7280;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.nearby-municipalities-scope .nm-refetch-btn:hover {
+  background: #f0fdf4;
+  color: #059669;
+  border-color: #bbf7d0;
+}
+
+.nearby-municipalities-scope .nm-refetch-btn:disabled {
+  cursor: wait;
+  opacity: 0.7;
+}
+
+.nearby-municipalities-scope .nm-spin {
+  animation: nm-spin 1s linear infinite;
+}
+
+@keyframes nm-spin {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Card Body */
+.nearby-municipalities-scope .nm-card-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.nearby-municipalities-scope .nm-card-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin: 0 0 0.5rem;
+  line-height: 1.3;
+}
+
+.nearby-municipalities-scope .nm-card-location {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  color: #6b7280;
+  font-size: 0.875rem;
+  margin: 0 0 1rem;
+}
+
+.nearby-municipalities-scope .nm-card-location svg {
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.nearby-municipalities-scope .nm-card-desc {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0 0 1rem;
+}
+
+/* Stats Row - Fixed Layout */
+.nearby-municipalities-scope .nm-stats-row {
+  display: flex;
+  gap: 1rem;
+  margin-top: auto;
+}
+
+.nearby-municipalities-scope .nm-stat-box {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #f9fafb;
+  padding: 0.875rem 1rem;
+  border-radius: 10px;
+  border: 1px solid #e5e7eb;
+}
+
+.nearby-municipalities-scope .nm-stat-icon {
+  color: #059669;
+  flex-shrink: 0;
+}
+
+.nearby-municipalities-scope .nm-stat-content {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.nearby-municipalities-scope .nm-stat-label {
+  font-size: 0.7rem;
   font-weight: 600;
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
+  color: #9ca3af;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.municipality-card p {
-  margin: 0.2rem 0;
-  color: #555;
+.nearby-municipalities-scope .nm-stat-value {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1f2937;
+  white-space: nowrap;
 }
 
-.municipality-card .state {
+/* Card Footer */
+.nearby-municipalities-scope .nm-card-footer {
+  padding-top: 1rem;
+  margin-top: 1rem;
+  border-top: 1px solid #f3f4f6;
+}
+
+.nearby-municipalities-scope .nm-view-link {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #059669;
+  font-weight: 600;
   font-size: 0.9rem;
-  color: #888;
+  transition: gap 0.2s ease;
 }
 
-.loading-container,
-.no-results,
-.error-message {
+.nearby-municipalities-scope .nm-card:hover .nm-view-link {
+  gap: 0.75rem;
+}
+
+/* Loading State */
+.nearby-municipalities-scope .nm-loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1.5rem;
+}
+
+.nearby-municipalities-scope .nm-loading-spinner {
+  width: 50px;
+  height: 50px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #059669;
+  border-radius: 50%;
+  animation: nm-spin 1s linear infinite;
+}
+
+.nearby-municipalities-scope .nm-loading-text {
+  color: #6b7280;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+/* Error State */
+.nearby-municipalities-scope .nm-error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1rem;
   text-align: center;
-  margin-top: 3rem;
-  color: #444;
+}
+
+.nearby-municipalities-scope .nm-error-icon {
+  color: #ef4444;
+}
+
+.nearby-municipalities-scope .nm-error-state p {
+  color: #1f2937;
+  font-weight: 600;
   font-size: 1.1rem;
+  margin: 0;
+}
+
+/* Empty State */
+.nearby-municipalities-scope .nm-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 0.75rem;
+  text-align: center;
+}
+
+.nearby-municipalities-scope .nm-empty-icon {
+  color: #9ca3af;
+}
+
+.nearby-municipalities-scope .nm-empty-state p {
+  color: #1f2937;
+  font-weight: 600;
+  font-size: 1.1rem;
+  margin: 0;
+}
+
+.nearby-municipalities-scope .nm-empty-state span {
+  color: #6b7280;
+  font-size: 0.95rem;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nearby-municipalities-scope .nm-page {
+    padding: 1rem;
+  }
+
+  .nearby-municipalities-scope .nm-title {
+    font-size: 1.5rem;
+  }
+
+  .nearby-municipalities-scope .nm-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nearby-municipalities-scope .nm-stats-row {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+}
+
+/* Glass Loading State */
+.nearby-municipalities-scope .nm-loading-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 1.5rem;
+  min-height: 500px;
+  background: white;
+  border-radius: 24px;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  /* Lighter border for light mode */
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+}
+
+.nearby-municipalities-scope .nm-loading-container.bg-glass-panel {
+  /* Override for glass look if desired, or keep light for now */
+  background: rgba(255, 255, 255, 0.8);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.07);
+}
+
+
+.nearby-municipalities-scope .nm-spinner-glass {
+  position: relative;
+  width: 80px;
+  height: 80px;
+}
+
+.nearby-municipalities-scope .nm-spinner-ring {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 4px solid transparent;
+  border-top-color: #10B981;
+  /* Green primary */
+  animation: nm-spin-glass 1.5s cubic-bezier(0.17, 0.67, 0.83, 0.67) infinite;
+}
+
+.nearby-municipalities-scope .nm-spinner-ring:nth-child(1) {
+  animation-delay: -0.4s;
+}
+
+.nearby-municipalities-scope .nm-spinner-ring:nth-child(2) {
+  width: 70%;
+  height: 70%;
+  top: 15%;
+  left: 15%;
+  border-top-color: #34D399;
+  /* Light green */
+  animation-duration: 2s;
+  animation-delay: -0.2s;
+  border-width: 3px;
+}
+
+.nearby-municipalities-scope .nm-spinner-ring:nth-child(3) {
+  width: 40%;
+  height: 40%;
+  top: 30%;
+  left: 30%;
+  border-top-color: #6EE7B7;
+  /* Lighter green */
+  animation-duration: 2.5s;
+  animation-delay: 0s;
+  border-width: 3px;
+}
+
+.nearby-municipalities-scope .nm-spinner-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 12px;
+  height: 12px;
+  background: #059669;
+  border-radius: 50%;
+  box-shadow: 0 0 20px #10B981;
+}
+
+@keyframes nm-spin-glass {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  50% {
+    transform: rotate(180deg);
+    border-top-color: #10B981;
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
 }

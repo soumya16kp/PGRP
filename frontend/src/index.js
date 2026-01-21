@@ -11,6 +11,7 @@ import Login from './pages/Login.jsx';
 import Signup from './pages/SignUp.jsx';
 import Home from './pages/Home.jsx';
 import Account from './pages/Account.js';
+import Admin from './pages/Admin.js'
 import NearbyMunicipalities from './pages/NearbyMunicipalities.jsx';
 import MunicipalityComplaints from './pages/MunicipalityComplaints.js';
 import MunicipalityDashboard from './pages/MunicipalityDashboard.js';
@@ -53,15 +54,16 @@ const router = createBrowserRouter([
         )
       },
 
-      // {
-      //     path: "/admin",
-      //     element: (
-      //         <AuthLayout authentication>
-      //             {" "}
-      //             <Admin/>
-      //         </AuthLayout>
-      //     ),
-      // },
+      {
+        path: "/admin/:id",
+        element: (
+          <AuthLayout authentication>
+            <Admin />
+          </AuthLayout>
+        ),
+      },
+
+      
       {
           path: "/municipality/:id/complaints",
           element: (

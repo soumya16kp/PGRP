@@ -1,4 +1,3 @@
-
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css');
 
 * {
@@ -17,16 +16,16 @@ footer {
     width: 98%;
     border-bottom-right-radius: 20px;
     border-bottom-left-radius: 20px;
-    background: linear-gradient(135deg, #1976D2 0%, #0D47A1 100%);
+    background: linear-gradient(135deg, #047857 0%, #0f766e 100%);
     border: 1px solid rgba(255, 255, 255, 0.1);
-    box-shadow: 0 5px 15px rgba(13, 71, 161, 0.2);
+    box-shadow: 0 5px 15px rgba(4, 120, 87, 0.2);
     transition: all 0.3s ease;
     overflow: hidden;
     color: white;
 }
 
 footer:hover {
-    box-shadow: 0 8px 25px rgba(13, 71, 161, 0.3);
+    box-shadow: 0 8px 25px rgba(4, 120, 87, 0.3);
     transform: translateY(-3px);
 }
 
@@ -190,8 +189,9 @@ footer img:hover {
         padding: 30px;
         gap: 25px;
     }
-    
-    .mainbox1, .common-box-of-footer {
+
+    .mainbox1,
+    .common-box-of-footer {
         min-width: 200px;
     }
 }
@@ -202,22 +202,23 @@ footer img:hover {
         margin: 3% 0% 2% 1.5%;
         border-radius: 15px;
     }
-    
+
     .main-content-of-footer {
         flex-direction: column;
         padding: 25px;
         gap: 30px;
     }
-    
-    .mainbox1, .common-box-of-footer {
+
+    .mainbox1,
+    .common-box-of-footer {
         width: 100%;
         min-width: auto;
     }
-    
+
     .common-box-of-footer h3 {
         font-size: 1.2rem;
     }
-    
+
     .footer-bottom {
         margin: 0 25px;
         padding: 15px;
@@ -230,21 +231,21 @@ footer img:hover {
         margin: 4% 0% 3% 2.5%;
         border-radius: 12px;
     }
-    
+
     .main-content-of-footer {
         padding: 20px;
     }
-    
+
     .common-box-of-footer a {
         font-size: 0.95rem;
     }
-    
+
     .mainbox1 i {
         font-size: 18px;
         width: 35px;
         height: 35px;
     }
-    
+
     .footer-bottom {
         margin: 0 20px;
         padding: 10px;
@@ -257,9 +258,11 @@ footer img:hover {
     0% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.1);
     }
+
     100% {
         transform: scale(1);
     }

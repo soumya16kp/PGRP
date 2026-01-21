@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import userService from "../services/userService";
 
+
 const UserContext = createContext();
 
 export const useUser = () => useContext(UserContext);
@@ -14,9 +15,11 @@ export const UserProvider = ({ children }) => {
     try {
       const profile = await userService.getProfile();
       setUser(profile);
+      return profile;
     } catch (error) {
       console.error("Failed to load profile", error);
       setUser(null);
+      return null;
     } finally {
       setLoading(false);
     }

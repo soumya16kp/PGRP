@@ -1,7 +1,5 @@
 @import url('https://unpkg.com/leaflet/dist/leaflet.css');
 
-
-
 /* Basic structure adjustments */
 .app-container {
   min-height: 100vh;
@@ -9,11 +7,13 @@
   flex-direction: column;
 }
 
-/* Base dot grid */
+/* Base dot grid + background image */
 .dot-grid {
-  background-color: #f8fafc; /* subtle light base */
-  background-image: radial-gradient(circle, rgba(203, 213, 225, 0.6) 1px, transparent 1px);
-  background-size: 28px 28px; /* slightly smaller spacing */
+  background:
+    url("./assets/BackgroundImage.jpg") center/cover no-repeat,
+    radial-gradient(circle, rgba(203, 213, 225, 0.6) 1px, transparent 1px);
+  background-color: #f8fafc;
+  background-size: cover, 28px 28px; /* first = image, second = dots */
   position: relative;
   overflow: hidden;
 }
@@ -42,11 +42,11 @@
   left: -50%;
   width: 200%;
   height: 200%;
-  background: radial-gradient(circle, rgba(255,255,255,0.05) 1%, transparent 5%);
+  background: radial-gradient(circle, rgba(255,255,255,0.1) 1%, transparent 5%);
   background-size: 50px 50px;
   animation: floatDots 20s linear infinite;
   pointer-events: none;
-  z-index: 0;
+  z-index: 1;
 }
 
 @keyframes floatDots {
@@ -57,8 +57,9 @@
 
 /* Green variant */
 .dot-grid.green {
+  background:
+    url("./assets/BackgroundImage.jpg") center/cover no-repeat,
+    radial-gradient(circle, rgba(143, 216, 168, 0.6) 1px, transparent 1px);
   background-color: #f0fdf4;
-  background-image: radial-gradient(circle, rgba(143, 216, 168, 0.6) 1px, transparent 1px);
+  background-size: cover, 28px 28px;
 }
-
-

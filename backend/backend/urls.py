@@ -10,7 +10,7 @@ urlpatterns = [
     path("api/", include("complaints.urls")),
     path('api/', include('account.urls')),
     # path('api/', include("members.urls")),
-    # path('api/',include("chat.urls")),
+    path("api/reviews/", include("review.urls")),
     
 ]
 

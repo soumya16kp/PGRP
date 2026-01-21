@@ -58,6 +58,11 @@ const MunicipalityComplaints = () => {
   const [comments, setComments] = useState({});
   const [newComment, setNewComment] = useState({});
   const [userLocation, setUserLocation] = useState(null);
+  const [similarComplaints, setSimilarComplaints] = useState([]);
+  const [showSimilarModal, setShowSimilarModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showLocationWarning, setShowLocationWarning] = useState(false);
+  const [warningDistance, setWarningDistance] = useState(0);
 
   const DEPARTMENTS = [
     { id: "water", name: "Water", icon: faTint, color: "#3498db" },
@@ -109,13 +114,15 @@ const MunicipalityComplaints = () => {
     fetchData();
   }, [id]);
 
+  const [visibleCount, setVisibleCount] = useState(20);
+
   // Filter and sort complaints
   useEffect(() => {
     let filtered = [...complaints];
 
     // Filter by department
     if (selectedDepartment !== "All") {
-      filtered = filtered.filter(complaint => 
+      filtered = filtered.filter(complaint =>
         complaint.department.toLowerCase() === selectedDepartment.toLowerCase()
       );
     }
@@ -130,38 +137,109 @@ const MunicipalityComplaints = () => {
     }
 
     // Sort complaints
-  filtered.sort((a, b) => {
-    switch (sortBy) {
-      case "upvotes":
-        return b.total_upvotes - a.total_upvotes;
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case "upvotes":
+          return b.total_upvotes - a.total_upvotes;
 
-      case "priority":
-        // Convert priority (string) → number before comparing
-        return parseFloat(b.priority) - parseFloat(a.priority);
+        case "priority":
+          // Convert priority (string) → number before comparing
+          return parseFloat(b.priority) - parseFloat(a.priority);
 
-      case "newest":
-        return new Date(b.created_at) - new Date(a.created_at);
+        case "newest":
+          return new Date(b.created_at) - new Date(a.created_at);
 
-      case "oldest":
-        return new Date(a.created_at) - new Date(b.created_at);
+        case "oldest":
+          return new Date(a.created_at) - new Date(b.created_at);
 
-      default:
-        return 0;
-    }
-  });
+        default:
+          return 0;
+      }
+    });
 
 
     setFilteredComplaints(filtered);
+    setVisibleCount(20); // Reset pagination on filter change
   }, [complaints, selectedDepartment, searchTerm, sortBy]);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const calculateDistance = (lat1, lon1, lat2, lon2) => {
+    const R = 6371; // km
+    const dLat = (lat2 - lat1) * (Math.PI / 180);
+    const dLon = (lon2 - lon1) * (Math.PI / 180);
+    const a =
+      Math.sin(dLat / 2) ** 2 +
+      Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) ** 2;
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  };
+
+  const checkSimilarAndSubmit = async (e) => {
+    e && e.preventDefault();
 
     if (!userLocation) {
       alert("Please enable location services to submit a complaint.");
       return;
     }
 
+    // Verify user is within municipality range
+    if (municipality?.latitude && municipality?.longitude) {
+      const dist = calculateDistance(
+        userLocation.latitude,
+        userLocation.longitude,
+        municipality.latitude,
+        municipality.longitude
+      );
+
+      // Determine acceptable radius: Use area if available (with 3x buffer), else default 25km
+      const estimatedRadius = municipality.area_sq_km
+        ? Math.sqrt(municipality.area_sq_km / Math.PI) + 10
+        : 25;
+
+      if (dist > estimatedRadius) {
+        setWarningDistance(dist);
+        setShowLocationWarning(true);
+        return;
+      }
+    }
+
+    await processComplaintSubmission();
+  };
+
+  const processComplaintSubmission = async () => {
+    setIsSubmitting(true);
+    setShowLocationWarning(false); // Ensure warning is closed
+
+    // Check for similar complaints first
+    try {
+      const checkData = {
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        description: newComplaint.description,
+        municipality_id: id
+      };
+
+      const res = await complaintService.checkSimilar(checkData);
+
+      if (res.similar_complaints && res.similar_complaints.length > 0) {
+        setSimilarComplaints(res.similar_complaints);
+        setShowSimilarModal(true);
+        setIsSubmitting(false);
+        return;
+      }
+
+      // If no similar complaints, proceed to submit
+      await handleFinalSubmit();
+
+    } catch (err) {
+      console.error("Error checking similar complaints:", err);
+      // Fallback to normal submit if check fails
+      await handleFinalSubmit();
+    }
+  };
+
+  const handleFinalSubmit = async () => {
     const complaintData = {
       department: newComplaint.department,
       topic: newComplaint.topic,
@@ -179,23 +257,52 @@ const MunicipalityComplaints = () => {
       setComplaints(updated);
       setNewComplaint({ department: "", topic: "", description: "", file: null });
       setShowComplaintForm(false);
+      setShowSimilarModal(false);
+      setSimilarComplaints([]);
     } catch (err) {
       console.error("Failed to submit complaint:", err);
+      if (err.response && err.response.data) {
+        const errorData = err.response.data;
+        const msg = errorData.error
+          ? (Array.isArray(errorData.error) ? errorData.error[0] : errorData.error)
+          : JSON.stringify(errorData); // Fallback for other errors
+        alert(msg);
+      } else {
+        alert("Failed to submit complaint. Please check your network.");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleUpvoteAndClose = async (complaint) => {
+    if (complaint.is_upvoted) {
+      alert("You have already supported this complaint! We have recorded your interest.");
+      setShowSimilarModal(false);
+      setShowComplaintForm(false);
+      return;
+    }
+
+    try {
+      await handleUpvote(complaint.id);
+      setShowSimilarModal(false);
+      setShowComplaintForm(false);
+      setNewComplaint({ department: "", topic: "", description: "", file: null });
+      setSimilarComplaints([]);
+    } catch (err) {
+      console.error("Error upvoting:", err);
     }
   };
 
   const canUpvote = (complaint) => {
     if (!complaint.latitude || !complaint.longitude || !userLocation) return false;
-    const R = 6371; // km
-    const dLat = (complaint.latitude - userLocation.latitude) * (Math.PI / 180);
-    const dLon = (complaint.longitude - userLocation.longitude) * (Math.PI / 180);
-    const a =
-      Math.sin(dLat / 2) ** 2 +
-      Math.cos(userLocation.latitude * (Math.PI / 180)) *
-        Math.cos(complaint.latitude * (Math.PI / 180)) *
-        Math.sin(dLon / 2) ** 2;
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-    return R * c <= 1; // 1 km radius
+    const dist = calculateDistance(
+      userLocation.latitude,
+      userLocation.longitude,
+      complaint.latitude,
+      complaint.longitude
+    );
+    return dist <= 1; // 1 km radius
   };
 
   const handleUpvote = async (id) => {
@@ -264,15 +371,15 @@ const MunicipalityComplaints = () => {
           </h1>
           <p>Report and track civic issues in your area</p>
         </div>
-        <button 
+        <button
           className="add-complaint-btn"
           onClick={() => setShowComplaintForm(!showComplaintForm)}
         >
-          <FontAwesomeIcon icon={faEdit} /> 
+          <FontAwesomeIcon icon={faEdit} />
           {showComplaintForm ? "Cancel" : "Report Issue"}
         </button>
         <button onClick={handleViewDashboard} className="view-dashboard-btn">
-         View Dashboard
+          View Dashboard
         </button>
       </div>
 
@@ -284,7 +391,7 @@ const MunicipalityComplaints = () => {
               <h3>
                 <FontAwesomeIcon icon={faExclamationTriangle} /> Report New Issue
               </h3>
-              <button 
+              <button
                 className="close-btn"
                 onClick={() => setShowComplaintForm(false)}
               >
@@ -293,7 +400,7 @@ const MunicipalityComplaints = () => {
 
 
             </div>
-            <form onSubmit={handleSubmit} className="complaint-form">
+            <form onSubmit={checkSimilarAndSubmit} className="complaint-form">
               <div className="form-group">
                 <label>
                   <FontAwesomeIcon icon={faFolder} /> Department *
@@ -342,9 +449,9 @@ const MunicipalityComplaints = () => {
                 <label>
                   <FontAwesomeIcon icon={faPaperclip} /> Attachment (Optional)
                 </label>
-                <input 
-                  type="file" 
-                  onChange={(e) => setNewComplaint({ ...newComplaint, file: e.target.files[0] })} 
+                <input
+                  type="file"
+                  onChange={(e) => setNewComplaint({ ...newComplaint, file: e.target.files[0] })}
                 />
               </div>
 
@@ -352,11 +459,123 @@ const MunicipalityComplaints = () => {
                 <button type="button" onClick={() => setShowComplaintForm(false)}>
                   <FontAwesomeIcon icon={faTimes} /> Cancel
                 </button>
-                <button type="submit" className="submit-btn">
-                  <FontAwesomeIcon icon={faFire} /> Submit Complaint
+                <button type="submit" className="submit-btn" disabled={isSubmitting}>
+                  {isSubmitting ? <FontAwesomeIcon icon={faSpinner} spin /> : <FontAwesomeIcon icon={faFire} />}
+                  {isSubmitting ? " Submitting..." : " Submit Complaint"}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Similar Complaints Modal */}
+      {showSimilarModal && (
+        <div className="complaint-form-overlay">
+          <div className="complaint-form-container similar-complaints-modal">
+            <div className="form-header">
+              <h3>
+                <FontAwesomeIcon icon={faSearch} /> Similar Issues Found
+              </h3>
+              <button className="close-btn" onClick={() => setShowSimilarModal(false)}>
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+
+            <div className="similar-complaints-content">
+              <p className="similar-intro">
+                We found existing complaints near you that look similar.
+                Upvoting an existing issue is often faster than reporting a new one!
+              </p>
+
+              <div className="similar-list">
+                {similarComplaints.map(complaint => (
+                  <div key={complaint.id} className="similar-item">
+                    <div className="similar-item-header">
+                      <span className="similar-topic">{complaint.topic}</span>
+                      <span className={`status-badge-small ${complaint.status.toLowerCase().replace(' ', '-')}`}>
+                        {complaint.status}
+                      </span>
+                    </div>
+                    <p className="similar-desc">{complaint.description}</p>
+                    <div className="similar-meta">
+                      <span><FontAwesomeIcon icon={faMapMarkerAlt} /> Within 1km</span>
+                      <span><FontAwesomeIcon icon={faThumbsUp} /> {complaint.total_upvotes} upvotes</span>
+                    </div>
+                    <button
+                      className={`upvote-existing-btn ${complaint.is_upvoted ? 'already-upvoted' : ''}`}
+                      onClick={() => handleUpvoteAndClose(complaint)}
+                    >
+                      {complaint.is_upvoted ? (
+                        <><FontAwesomeIcon icon={faCheck} /> Already Supported</>
+                      ) : (
+                        <><FontAwesomeIcon icon={faThumbsUp} /> Upvote This Instead</>
+                      )}
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <div className="similar-actions">
+                <button
+                  className="cancel-btn"
+                  onClick={() => setShowSimilarModal(false)}
+                >
+                  Cancel
+                </button>
+                <button
+                  className="submit-anyway-btn"
+                  onClick={handleFinalSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <FontAwesomeIcon icon={faSpinner} spin /> Submitting...
+                    </>
+                  ) : (
+                    "My issue is different, Submit Anyway"
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Location Warning Modal */}
+      {showLocationWarning && (
+        <div className="complaint-form-overlay">
+          <div className="complaint-form-container location-warning-modal">
+            <div className="form-header">
+              <h3 style={{ color: "#e74c3c" }}>
+                <FontAwesomeIcon icon={faExclamationTriangle} /> Location Mismatch
+              </h3>
+              <button className="close-btn" onClick={() => setShowLocationWarning(false)}>
+                <FontAwesomeIcon icon={faTimes} />
+              </button>
+            </div>
+
+            <div className="warning-content">
+              <div className="warning-icon-large" style={{ textAlign: "center", margin: "20px 0", color: "#e74c3c" }}>
+                <FontAwesomeIcon icon={faBan} size="4x" />
+              </div>
+              <p style={{ fontSize: "1.1em", lineHeight: "1.6", color: "#2c3e50", textAlign: "center", marginBottom: "20px" }}>
+                You appear to be <strong>{warningDistance.toFixed(1)}km</strong> away from <strong>{municipality?.name}</strong>.
+              </p>
+              <p style={{ color: "#7f8c8d", textAlign: "center", marginBottom: "30px" }}>
+                You are strictly not allowed to raise a complaint from this distance. You must be physically present in the location.
+              </p>
+
+              <div className="form-actions" style={{ justifyContent: "center" }}>
+                <button
+                  type="button"
+                  onClick={() => setShowLocationWarning(false)}
+                  style={{ background: "#95a5a6", width: "200px", justifyContent: "center", borderRadius: "20px", padding: "12px 25px", color: "white", border: "none", cursor: "pointer", fontWeight: "600", fontSize: "1rem" }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
@@ -367,7 +586,7 @@ const MunicipalityComplaints = () => {
           <h3>
             <FontAwesomeIcon icon={faFilter} /> Filters
           </h3>
-          
+
           {/* Search */}
           <div className="filter-group">
             <label>
@@ -387,8 +606,8 @@ const MunicipalityComplaints = () => {
             <label>
               <FontAwesomeIcon icon={faSort} /> Sort By
             </label>
-            <select 
-              value={sortBy} 
+            <select
+              value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
               className="sort-select"
             >
@@ -405,7 +624,7 @@ const MunicipalityComplaints = () => {
               <FontAwesomeIcon icon={faCity} /> Departments
             </label>
             <div className="department-cards">
-              <div 
+              <div
                 className={`department-card ${selectedDepartment === "All" ? "active" : ""}`}
                 onClick={() => setSelectedDepartment("All")}
               >
@@ -468,12 +687,12 @@ const MunicipalityComplaints = () => {
                 </div>
                 <h3>No complaints found</h3>
                 <p>
-                  {searchTerm || selectedDepartment !== "All" 
-                    ? "Try adjusting your filters or search term" 
+                  {searchTerm || selectedDepartment !== "All"
+                    ? "Try adjusting your filters or search term"
                     : "Be the first to report an issue in your area!"
                   }
                 </p>
-                <button 
+                <button
                   className="report-first-btn"
                   onClick={() => setShowComplaintForm(true)}
                 >
@@ -481,112 +700,123 @@ const MunicipalityComplaints = () => {
                 </button>
               </div>
             ) : (
-              filteredComplaints.map((complaint) => (
-                <div key={complaint.id} className="complaint-card">
-                  <div className="complaint-header">
-                    <div className="complaint-meta">
-                      <span 
-                        className="department-badge"
-                        style={{ 
-                          backgroundColor: DEPARTMENTS.find(d => 
-                            d.name.toLowerCase() === complaint.department?.toLowerCase()
-                          )?.color || '#95a5a6'
-                        }}
-                      >
-                        <FontAwesomeIcon 
-                          icon={DEPARTMENTS.find(d => 
-                            d.name.toLowerCase() === complaint.department?.toLowerCase()
-                          )?.icon || faClipboard} 
-                        /> 
-                        {complaint.department}
-                      </span>
-                      <span 
-                        className="status-badge"
-                        style={{ backgroundColor: getStatusColor(complaint.status) }}
-                      >
-                        <FontAwesomeIcon icon={getStatusIcon(complaint.status)} /> 
-                        {complaint.status || 'Pending'}
-                      </span>
-                    </div>
-                    <span className="complaint-time">
-                      <FontAwesomeIcon icon={faClock} /> 
-                      {new Date(complaint.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-
-                  <h3 className="complaint-title">{complaint.topic}</h3>
-                  <p className="complaint-description">{complaint.description}</p>
-
-                  {complaint.media && (
-                    <div className="complaint-media">
-                      <a href={complaint.media} target="_blank" rel="noreferrer" className="media-link">
-                        <FontAwesomeIcon icon={faPaperclip} /> View Attachment
-                      </a>
-                    </div>
-                  )}
-
-                  <div className="complaint-actions">
-                    <button
-                      className={`upvote-btn ${canUpvote(complaint) ? '' : 'disabled'}`}
-                      onClick={() => handleUpvote(complaint.id)}
-                      disabled={!canUpvote(complaint)}
-                      title={canUpvote(complaint) ? "Upvote this issue" : "Must be within 1km to upvote"}
-                    >
-                      <FontAwesomeIcon icon={faThumbsUp} /> 
-                      {complaint.total_upvotes || 0}
-                    </button>
-                    
-                    <button 
-                      className="comment-btn"
-                      onClick={() => toggleComments(complaint.id)}
-                    >
-                      <FontAwesomeIcon icon={faComment} /> 
-                      {complaint.comments?.length || 0}
-                    </button>
-
-                    <span className="location-indicator">
-                      <FontAwesomeIcon icon={faMapMarkerAlt} /> 
-                      {canUpvote(complaint) ? "Within 1km" : "Outside 1km"}
-                    </span>
-                  </div>
-
-                  {comments[complaint.id] && (
-                    <div className="comment-section">
-                      <h4>
-                        <FontAwesomeIcon icon={faComment} /> 
-                        Comments ({complaint.comments?.length || 0})
-                      </h4>
-                      {complaint.comments?.length > 0 ? (
-                        complaint.comments.map((comment) => (
-                          <div key={comment.id} className="comment">
-                            <div className="comment-header">
-                              <strong>{comment.user}</strong>
-                              <span className="comment-time">
-                                <FontAwesomeIcon icon={faClock} />
-                                {new Date(comment.created_at).toLocaleString()}
-                              </span>
-                            </div>
-                            <div className="comment-content">{comment.content}</div>
-                          </div>
-                        ))
-                      ) : (
-                        <p className="no-comments">No comments yet. Be the first to comment!</p>
-                      )}
-                      <div className="comment-input">
-                        <input
-                          type="text"
-                          placeholder="Add a comment..."
-                          value={newComment[complaint.id] || ""}
-                          onChange={(e) => setNewComment({ ...newComment, [complaint.id]: e.target.value })}
-                        />
-                        <button onClick={() => handleCommentSubmit(complaint.id)}>
-                          <FontAwesomeIcon icon={faEdit} /> Post
-                        </button>
+              <>
+                {filteredComplaints.slice(0, visibleCount).map((complaint) => (
+                  <div key={complaint.id} className="complaint-card">
+                    <div className="complaint-header">
+                      <div className="complaint-meta">
+                        <span
+                          className="department-badge"
+                          style={{
+                            backgroundColor: DEPARTMENTS.find(d =>
+                              d.name.toLowerCase() === complaint.department?.toLowerCase()
+                            )?.color || '#95a5a6'
+                          }}
+                        >
+                          <FontAwesomeIcon
+                            icon={DEPARTMENTS.find(d =>
+                              d.name.toLowerCase() === complaint.department?.toLowerCase()
+                            )?.icon || faClipboard}
+                          />
+                          {complaint.department}
+                        </span>
+                        <span
+                          className="status-badge"
+                          style={{ backgroundColor: getStatusColor(complaint.status) }}
+                        >
+                          <FontAwesomeIcon icon={getStatusIcon(complaint.status)} />
+                          {complaint.status || 'Pending'}
+                        </span>
                       </div>
+                      <span className="complaint-time">
+                        <FontAwesomeIcon icon={faClock} />
+                        {new Date(complaint.created_at).toLocaleDateString()}
+                      </span>
                     </div>
-                  )}
-                </div>
-              ))
+
+                    <h3 className="complaint-title">{complaint.topic}</h3>
+                    <p className="complaint-description">{complaint.description}</p>
+
+                    {complaint.media && (
+                      <div className="complaint-media">
+                        <a href={complaint.media} target="_blank" rel="noreferrer" className="media-link">
+                          <FontAwesomeIcon icon={faPaperclip} /> View Attachment
+                        </a>
+                      </div>
+                    )}
+
+                    <div className="complaint-actions">
+                      <button
+                        className={`upvote-btn ${canUpvote(complaint) ? '' : 'disabled'}`}
+                        onClick={() => handleUpvote(complaint.id)}
+                        disabled={!canUpvote(complaint)}
+                        title={canUpvote(complaint) ? "Upvote this issue" : "Must be within 1km to upvote"}
+                      >
+                        <FontAwesomeIcon icon={faThumbsUp} />
+                        {complaint.total_upvotes || 0}
+                      </button>
+
+                      <button
+                        className="comment-btn"
+                        onClick={() => toggleComments(complaint.id)}
+                      >
+                        <FontAwesomeIcon icon={faComment} />
+                        {complaint.comments?.length || 0}
+                      </button>
+
+                      <span className="location-indicator">
+                        <FontAwesomeIcon icon={faMapMarkerAlt} />
+                        {canUpvote(complaint) ? "Within 1km" : "Outside 1km"}
+                      </span>
+                    </div>
+
+                    {comments[complaint.id] && (
+                      <div className="comment-section">
+                        <h4>
+                          <FontAwesomeIcon icon={faComment} />
+                          Comments ({complaint.comments?.length || 0})
+                        </h4>
+                        {complaint.comments?.length > 0 ? (
+                          complaint.comments.map((comment) => (
+                            <div key={comment.id} className="comment">
+                              <div className="comment-header">
+                                <strong>{comment.user}</strong>
+                                <span className="comment-time">
+                                  <FontAwesomeIcon icon={faClock} />
+                                  {new Date(comment.created_at).toLocaleString()}
+                                </span>
+                              </div>
+                              <div className="comment-content">{comment.content}</div>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="no-comments">No comments yet. Be the first to comment!</p>
+                        )}
+                        <div className="comment-input">
+                          <input
+                            type="text"
+                            placeholder="Add a comment..."
+                            value={newComment[complaint.id] || ""}
+                            onChange={(e) => setNewComment({ ...newComment, [complaint.id]: e.target.value })}
+                          />
+                          <button onClick={() => handleCommentSubmit(complaint.id)}>
+                            <FontAwesomeIcon icon={faEdit} /> Post
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+
+                {visibleCount < filteredComplaints.length && (
+                  <button
+                    className="load-more-btn"
+                    onClick={() => setVisibleCount(prev => prev + 20)}
+                  >
+                    Load More Complaints
+                  </button>
+                )}
+              </>
             )}
           </div>
         </div>

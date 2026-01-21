@@ -20,7 +20,8 @@ from environ import Env
 env= Env()
 Env.read_env()
 
-ENVIRONMENT = env ('ENVIRONMENT', default="production")
+ENVIRONMENT = env ('ENVIRONMENT', default="development")
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -61,6 +62,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'account',
     'api',
+    'review',
     'cloudinary',
     'complaints',
     'corsheaders',
@@ -146,6 +148,7 @@ CSRF_TRUSTED_ORIGINS = [
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost:3000",          # for dev
+    "http://localhost:3001",          # for dev
     "https://pgrp.vercel.app"  # for production
 ]
 

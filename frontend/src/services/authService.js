@@ -1,25 +1,33 @@
 import axios from 'axios';
 
-// Create a dedicated Axios instance with a base URL
+
 const apiClient = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
 });
 
+apiClient.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
 
-apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers['Authorization'] = `Token ${token}`;
-    } else {
-      console.log('Request does not have a token.');
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
+  const authFreeEndpoints = [
+    '/login/',
+    '/signup/',
+    '/municipality/send-otp/',
+    '/municipality/verify-otp/',
+  ];
+
+  const isAuthFree = authFreeEndpoints.some((url) =>
+    config.url.includes(url)
+  );
+
+  if (token && !isAuthFree) {
+    config.headers.Authorization = `Token ${token}`;
   }
-);
+
+  return config;
+});
+
+
+
 
 const login = async (username, password) => {
   const response = await apiClient.post('/login/', { username, password });
@@ -49,7 +57,11 @@ const signup = async (username, email, password) => {
 };
 
 const logout = async () => {
-  await apiClient.post('/logout/');
+  try {
+    await apiClient.post('/logout/');
+  } catch (e) {
+    console.error("Logout error", e);
+  }
   localStorage.removeItem("token");
   delete apiClient.defaults.headers.common['Authorization'];
 };
@@ -57,14 +69,41 @@ const logout = async () => {
 const getCurrentUser = async () => {
   try {
     const response = await apiClient.get('/protected/');
-    return response.data.user_details;
+    return response.data.user_details; 
   } catch (error) {
     console.error("Failed to fetch user:", error);
-    localStorage.removeItem("token");
     return null;
   }
 };
 
+
+const sendMunicipalityOtp = async (email, phone, password) => {
+    const response = await apiClient.post('/municipality/send-otp/', {
+        email,
+        phone,
+        password
+    });
+    return response.data;
+};
+
+// Step 2: Verify OTP and Login
+const verifyMunicipalityOtp = async (phone, otp) => {
+  const response = await apiClient.post('/municipality/verify-otp/', {
+    phone,
+    otp,
+  });
+
+  if (response.data.token) {
+    const token = response.data.token;
+    localStorage.setItem("token", token);
+    apiClient.defaults.headers.common["Authorization"] = `Token ${token}`;
+
+
+    return { token: token, user: response.data.official }; 
+  }
+
+  return response.data;
+};
 
 const authService = {
   apiClient,
@@ -72,6 +111,8 @@ const authService = {
   signup,
   logout,
   getCurrentUser,
+  sendMunicipalityOtp,
+  verifyMunicipalityOtp,
 };
 
 export default authService;

@@ -14,6 +14,10 @@ const getComplaints = async (municipalityId = null) => {
   return response.data;
 };
 const getComplaintById = async (id) => {
+  if (!id || id === 'undefined') {
+    console.warn("getComplaintById called with invalid ID:", id);
+    return null;
+  }
   const response = await apiClient.get(`${BASE_URL}${id}/`);
   return response.data;
 };
@@ -59,6 +63,11 @@ const getRankedComplaints = async (page = 1) => {
   return response.data;
 };
 
+const checkSimilar = async (data) => {
+  const response = await apiClient.post(`${BASE_URL}check_similar/`, data);
+  return response.data;
+};
+
 
 const complaintService = {
   getComplaints,
@@ -68,6 +77,7 @@ const complaintService = {
   toggleUpvote,
   updateStatus,
   getRankedComplaints,
+  checkSimilar,
 };
 
 export default complaintService;
