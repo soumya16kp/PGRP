@@ -16,6 +16,7 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
+  Lock,
 } from "lucide-react";
 import complaintService from "../services/complaintService";
 import { useNavigate } from "react-router-dom";
@@ -34,7 +35,7 @@ export default function HomePage() {
   const [refreshKey, setRefreshKey] = useState(0);
 
   const navigate = useNavigate();
-  const { user, status: isLoggedIn } = useSelector((state) => state.auth);
+  const { userData: user, status: isLoggedIn } = useSelector((state) => state.auth);
 
   const handleDashboardClick = () => {
     if (!isLoggedIn) {
@@ -55,7 +56,8 @@ export default function HomePage() {
     try {
       setLoading(true);
 
-      const data = await complaintService.getRankedComplaints(pageNumber);
+      const municipalityId = user?.municipality?.id;
+      const data = await complaintService.getRankedComplaints(pageNumber, municipalityId);
       const results = data.results || [];
 
       // backend-driven hasMore
@@ -344,106 +346,170 @@ export default function HomePage() {
       </section>
 
       {/* 🔥 TRENDING ISSUES GRID */}
+      {/* 🔥 TRENDING ISSUES GRID - ALWAYS VISIBLE BUT CONDITIONALLY CONTENT */}
       <section className="trending-section">
         <div className="section-header">
           <h2>📊 All Trending Issues</h2>
           <p className="section-subtitle">Sorted by community engagement and urgency</p>
         </div>
 
-        <div className="trending-grid">
-          {trendingIssues.map((issue) => {
-            const getPriorityConfig = (p) => {
-              if (p >= 0.8) return { label: "High Priority", color: "bg-red-100 text-red-700 border-red-200" };
-              if (p >= 0.5) return { label: "Medium Priority", color: "bg-yellow-100 text-yellow-800 border-yellow-200" };
-              return { label: "Low Priority", color: "bg-green-100 text-green-700 border-green-200" };
-            };
-            const priorityConf = getPriorityConfig(issue.priority);
-
-            return (
-              <motion.div
-                key={issue.id}
-                className="trending-card"
-                whileHover={{ y: -5 }}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-              >
-                {/* 1. Header: Department & Date */}
-                <div className="card-top-row">
-                  <span className="dept-tag">{issue.department}</span>
-                  <span className="date-text">{formatDate(issue.created_at)}</span>
+        {/* STATE 1: NOT LOGGED IN -> LOCKED */}
+        {!isLoggedIn ? (
+          <div className="trending-locked-container">
+            {/* Skeleton Background */}
+            <div className="skeleton-grid">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="skeleton-card">
+                  <div className="skeleton-header"></div>
+                  <div className="skeleton-body"></div>
+                  <div className="skeleton-footer"></div>
                 </div>
+              ))}
+            </div>
+            <div className="trending-blur-overlay"></div>
 
-                {/* 2. Main Content */}
-                <div className="card-main">
-                  <h4 className="card-title" title={issue.topic}>
-                    {issue.topic?.length > 50 ? issue.topic.substring(0, 50) + "..." : issue.topic || "Untitled"}
-                  </h4>
-                  <div className="card-badges">
-                    <span className={`status-pill ${priorityConf.color}`}>
-                      {priorityConf.label}
-                    </span>
-                    <span className="muni-pill">
-                      <Building size={12} />
-                      {issue.municipality?.name || "General"}
-                    </span>
-                  </div>
-                  <p className="card-desc">
-                    {issue.description?.length > 80
-                      ? issue.description.substring(0, 80) + "..."
-                      : issue.description || "No details provided."}
-                  </p>
+            <div className="locked-card">
+              <div className="locked-icon-wrapper">
+                <Lock size={40} strokeWidth={2.5} />
+              </div>
+              <h3 className="locked-title">Restricted Access</h3>
+              <p className="locked-desc">
+                You won't be able to see the trending issues section if you didn't login.
+                Join your community to view and track local issues.
+              </p>
+              <button onClick={() => navigate("/login")} className="auth-btn">
+                Login to View
+              </button>
+            </div>
+          </div>
+        ) : !user?.municipality ? (
+          /* STATE 2: LOGGED IN BUT NO MUNICIPALITY -> WAITING FOR LOCATION PROMPTER */
+          <div className="trending-locked-container">
+            {/* Skeleton Background */}
+            <div className="skeleton-grid">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="skeleton-card">
+                  <div className="skeleton-header"></div>
+                  <div className="skeleton-body"></div>
+                  <div className="skeleton-footer"></div>
                 </div>
+              ))}
+            </div>
+            <div className="trending-blur-overlay"></div>
 
-                {/* 3. Footer: Stats & Action */}
-                <div className="card-actions">
-                  <div className="stats-group">
-                    <div className="stat-pill upvote">
-                      <span className="icon">⬆</span>
-                      <span className="val">{issue.total_upvotes}</span>
-                    </div>
-                    <div className="stat-pill score" title="Engagement Score">
-                      <BarChart3 size={14} />
-                      <span className="val">{(issue.score || 0).toFixed(1)}</span>
-                    </div>
-                  </div>
+            <div className="locked-card">
+              <div className="waiting-icon-wrapper">
+                <MapPin size={40} className="animate-bounce" strokeWidth={2.5} />
+              </div>
+              <h3 className="locked-title">Locating Your Area...</h3>
+              <p className="locked-desc">
+                We are detecting your location to show you the most relevant issues in your municipality.
+                Please allow location access in the prompt above.
+              </p>
+              <button className="location-wait-btn">
+                Waiting for location...
+              </button>
+            </div>
+          </div>
+        ) : (
+          /* STATE 3: FULL ACCESS -> SHOW GRID */
+          <>
+            <div className="trending-grid">
+              {trendingIssues.map((issue) => {
+                const getPriorityConfig = (p) => {
+                  if (p >= 0.8) return { label: "High Priority", color: "bg-red-100 text-red-700 border-red-200" };
+                  if (p >= 0.5) return { label: "Medium Priority", color: "bg-yellow-100 text-yellow-800 border-yellow-200" };
+                  return { label: "Low Priority", color: "bg-green-100 text-green-700 border-green-200" };
+                };
+                const priorityConf = getPriorityConfig(issue.priority);
 
-                  <a
-                    href={`https://www.google.com/maps?q=${issue.latitude},${issue.longitude}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="map-icon-btn"
-                    title="View Location"
+                return (
+                  <motion.div
+                    key={issue.id}
+                    className="trending-card"
+                    whileHover={{ y: -5 }}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
                   >
-                    <MapPin size={18} />
-                  </a>
-                </div>
-              </motion.div>
-            );
-          })}
-        </div>
+                    {/* 1. Header: Department & Date */}
+                    <div className="card-top-row">
+                      <span className="dept-tag">{issue.department}</span>
+                      <span className="date-text">{formatDate(issue.created_at)}</span>
+                    </div>
 
-        {hasMore && !loading && (
-          <div className="load-more-container">
-            <button
-              onClick={() => setPage((p) => p + 1)}
-              className="load-more-btn"
-            >
-              Load More Issues
-            </button>
-          </div>
-        )}
+                    {/* 2. Main Content */}
+                    <div className="card-main">
+                      <h4 className="card-title" title={issue.topic}>
+                        {issue.topic?.length > 50 ? issue.topic.substring(0, 50) + "..." : issue.topic || "Untitled"}
+                      </h4>
+                      <div className="card-badges">
+                        <span className={`status-pill ${priorityConf.color}`}>
+                          {priorityConf.label}
+                        </span>
+                        <span className="muni-pill">
+                          <Building size={12} />
+                          {issue.municipality?.name || "General"}
+                        </span>
+                      </div>
+                      <p className="card-desc">
+                        {issue.description?.length > 80
+                          ? issue.description.substring(0, 80) + "..."
+                          : issue.description || "No details provided."}
+                      </p>
+                    </div>
 
-        {loading && (
-          <div className="loading-container">
-            <div className="loading-spinner"></div>
-            <p className="loading-text">Loading more issues...</p>
-          </div>
-        )}
+                    {/* 3. Footer: Stats & Action */}
+                    <div className="card-actions">
+                      <div className="stats-group">
+                        <div className="stat-pill upvote">
+                          <span className="icon">⬆</span>
+                          <span className="val">{issue.total_upvotes}</span>
+                        </div>
+                        <div className="stat-pill score" title="Engagement Score">
+                          <BarChart3 size={14} />
+                          <span className="val">{(issue.score || 0).toFixed(1)}</span>
+                        </div>
+                      </div>
 
-        {!hasMore && !loading && trendingIssues.length > 0 && (
-          <div className="end-message">
-            <p>You've reached the end of trending issues</p>
-          </div>
+                      <a
+                        href={`https://www.google.com/maps?q=${issue.latitude},${issue.longitude}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="map-icon-btn"
+                        title="View Location"
+                      >
+                        <MapPin size={18} />
+                      </a>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </div>
+
+            {hasMore && !loading && (
+              <div className="load-more-container">
+                <button
+                  onClick={() => setPage((p) => p + 1)}
+                  className="load-more-btn"
+                >
+                  Load More Issues
+                </button>
+              </div>
+            )}
+
+            {loading && (
+              <div className="loading-container">
+                <div className="loading-spinner"></div>
+                <p className="loading-text">Loading more issues...</p>
+              </div>
+            )}
+
+            {!hasMore && !loading && trendingIssues.length > 0 && (
+              <div className="end-message">
+                <p>You've reached the end of trending issues</p>
+              </div>
+            )}
+          </>
         )}
       </section>
 

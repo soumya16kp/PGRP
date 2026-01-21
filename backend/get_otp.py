@@ -9,14 +9,14 @@ django.setup()
 from api.models import MunicipalityOTP
 
 def get_latest_otp():
-    try:
-        latest_otp = MunicipalityOTP.objects.latest('created_at')
-        print(f"Latest OTP for {latest_otp.phone}: {latest_otp.otp}")
-        print(f"Created at: {latest_otp.created_at}")
-    except MunicipalityOTP.DoesNotExist:
-        print("No OTPs found in the database.")
-    except Exception as e:
-        print(f"Error: {e}")
+    otps = MunicipalityOTP.objects.order_by('-created_at')[:5]
+    with open('otp_log.txt', 'w') as f:
+        if not otps:
+            f.write("No OTPs found.")
+            return
+
+        for otp_obj in otps:
+            f.write(f"ID: {otp_obj.id} | Phone: {otp_obj.phone} | OTP: '{otp_obj.otp}' | Created: {otp_obj.created_at}\n")
 
 if __name__ == "__main__":
     get_latest_otp()

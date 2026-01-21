@@ -371,16 +371,18 @@ const MunicipalityComplaints = () => {
           </h1>
           <p>Report and track civic issues in your area</p>
         </div>
-        <button
-          className="add-complaint-btn"
-          onClick={() => setShowComplaintForm(!showComplaintForm)}
-        >
-          <FontAwesomeIcon icon={faEdit} />
-          {showComplaintForm ? "Cancel" : "Report Issue"}
-        </button>
-        <button onClick={handleViewDashboard} className="view-dashboard-btn">
-          View Dashboard
-        </button>
+        <div className="button-group">
+          <button
+            className="add-complaint-btn"
+            onClick={() => setShowComplaintForm(!showComplaintForm)}
+          >
+            <FontAwesomeIcon icon={faEdit} />
+            {showComplaintForm ? "Cancel" : "Report Issue"}
+          </button>
+          <button onClick={handleViewDashboard} className="view-dashboard-btn">
+            View Dashboard
+          </button>
+        </div>
       </div>
 
       {/* Complaint Form Overlay */}

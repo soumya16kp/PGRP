@@ -56,9 +56,13 @@ const updateStatus = async (complaintId, newStatus) => {
   return response.data;
 };
 
-const getRankedComplaints = async (page = 1) => {
+const getRankedComplaints = async (page = 1, municipalityId = null) => {
+  const params = { page };
+  if (municipalityId) {
+    params.municipality_id = municipalityId;
+  }
   const response = await apiClient.get(`${BASE_URL}ranked/`, {
-    params: { page },
+    params,
   });
   return response.data;
 };

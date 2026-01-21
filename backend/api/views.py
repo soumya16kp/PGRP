@@ -95,15 +95,24 @@ def protected_view(request):
     }
 
     # Add municipality details if user is an official
+    # Add municipality details if user is an official
     if user.is_staff:
         try:
             official = MunicipalityOfficial.objects.get(user=user)
-            response_data['user_details']['municipality'] = official.municipality.id
-            response_data['user_details']['municipality_name'] = official.municipality.name
+            response_data['user_details']['municipality'] = {
+                'id': official.municipality.id,
+                'name': official.municipality.name
+            }
             response_data['user_details']['designation'] = official.designation
-            response_data['user_details']['profile_image'] = official.user.official_profile.user.profile_image if hasattr(official.user, 'profile_image') else None
+            response_data['user_details']['profile_image'] = official.user.official_profile.user.profile_image.url if hasattr(official.user, 'profile_image') and official.user.profile_image else None
         except MunicipalityOfficial.DoesNotExist:
             pass
+    # Add municipality details for citizens
+    elif hasattr(user, 'profile') and user.profile.municipality:
+         response_data['user_details']['municipality'] = {
+            'id': user.profile.municipality.id,
+            'name': user.profile.municipality.name
+        }
 
     return Response(response_data)
 

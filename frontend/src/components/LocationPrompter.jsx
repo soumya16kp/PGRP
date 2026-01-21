@@ -3,10 +3,13 @@ import { useSelector, useDispatch } from "react-redux";
 import { MapPin, AlertCircle, Loader2, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import authService from "../services/authService";
+import userService from "../services/userService";
 import { login } from "../store/AuthSlice";
 
+import "./LocationPrompter.css";
+
 const LocationPrompter = () => {
-    const { user, status } = useSelector((state) => state.auth);
+    const { userData: user, status } = useSelector((state) => state.auth);
     const dispatch = useDispatch();
     const [isOpen, setIsOpen] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -38,7 +41,7 @@ const LocationPrompter = () => {
 
                 try {
                     // Update profile with coordinates
-                    const updatedUser = await authService.updateProfile({
+                    const updatedUser = await userService.updateProfile({
                         latitude,
                         longitude
                     });
@@ -46,7 +49,7 @@ const LocationPrompter = () => {
                     if (updatedUser.municipality) {
                         setSuccess(true);
                         // Update Redux state
-                        dispatch(login({ user: updatedUser }));
+                        dispatch(login({ userData: updatedUser }));
                         setTimeout(() => setIsOpen(false), 2000);
                     } else {
                         setError("We couldn't find a supported municipality at your location.");
@@ -73,53 +76,58 @@ const LocationPrompter = () => {
         <AnimatePresence>
             {isOpen && (
                 <motion.div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4"
+                    className="prompter-overlay"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
                 >
                     <motion.div
-                        className="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden relative"
-                        initial={{ scale: 0.9, y: 20 }}
-                        animate={{ scale: 1, y: 0 }}
-                        exit={{ scale: 0.9, y: 20 }}
+                        className="prompter-card"
+                        initial={{ scale: 0.9, y: 20, opacity: 0 }}
+                        animate={{ scale: 1, y: 0, opacity: 1 }}
+                        exit={{ scale: 0.95, y: 10, opacity: 0 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
                     >
-                        {/* Header Image/Pattern */}
-                        <div className="h-32 bg-emerald-600 relative overflow-hidden flex items-center justify-center">
-                            <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1542601906990-24bd0827f8d1?auto=format&fit=crop&q=80')] bg-cover opacity-20 mix-blend-overlay"></div>
-                            <MapPin size={48} className="text-white relative z-10" />
-                        </div>
+                        <div className="prompter-content">
+                            <div className="icon-container">
+                                <MapPin size={36} className="icon-map" />
+                            </div>
 
-                        <div className="p-6 text-center">
-                            <h3 className="text-xl font-bold text-gray-900 mb-2">
-                                Set Your Municipality
+                            <h3 className="prompter-title">
+                                Locate Your City
                             </h3>
-                            <p className="text-gray-600 mb-6 text-sm">
-                                To provide you with relevant reports and local updates, we need to know your location. Please allow access to assign your nearest municipality.
+                            <p className="prompter-desc">
+                                To show you relevant issues and updates, we need to identify your municipality.
                             </p>
 
                             {error && (
-                                <div className="bg-red-50 text-red-600 p-3 rounded-lg text-sm mb-4 flex items-center justify-center gap-2">
-                                    <AlertCircle size={16} /> {error}
+                                <div className="error-box">
+                                    <AlertCircle size={18} className="shrink-0" />
+                                    <span>{error}</span>
                                 </div>
                             )}
 
                             {success ? (
-                                <div className="bg-green-50 text-green-700 p-3 rounded-lg text-sm mb-4 flex items-center justify-center gap-2">
-                                    <CheckCircle2 size={16} /> Municipality Assigned!
-                                </div>
+                                <motion.div
+                                    initial={{ opacity: 0, scale: 0.9 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    className="success-box"
+                                >
+                                    <CheckCircle2 size={18} />
+                                    Municipality Assigned!
+                                </motion.div>
                             ) : (
                                 <button
                                     onClick={handleAllowLocation}
                                     disabled={loading}
-                                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold py-3 px-6 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-70 disabled:cursor-not-allowed shadow-lg shadow-emerald-600/20"
+                                    className="allow-btn"
                                 >
                                     {loading ? (
                                         <>
-                                            <Loader2 size={18} className="animate-spin" /> Locating...
+                                            <Loader2 size={20} className="animate-spin" /> Detecting...
                                         </>
                                     ) : (
-                                        "Allow Location Access"
+                                        "Allow Access"
                                     )}
                                 </button>
                             )}
@@ -127,9 +135,9 @@ const LocationPrompter = () => {
                             {!loading && !success && (
                                 <button
                                     onClick={() => setIsOpen(false)}
-                                    className="mt-4 text-gray-400 text-sm hover:text-gray-600 transition-colors"
+                                    className="skip-btn"
                                 >
-                                    Skip for now (Limited Access)
+                                    Skip for now
                                 </button>
                             )}
                         </div>

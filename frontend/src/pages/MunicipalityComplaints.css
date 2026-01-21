@@ -1355,6 +1355,8 @@ button:disabled {
     border: 1px solid #f1f5f9 !important;
     transform: none !important;
     animation: none !important;
+    color: #1f2937 !important;
+    /* Fix: Ensure text is dark on white background */
   }
 
   /* Simplify animations on mobile */

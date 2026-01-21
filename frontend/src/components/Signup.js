@@ -23,7 +23,7 @@ function Signup() {
             if (userData) {
                 const currentUser = await authService.getCurrentUser();
                 if (currentUser) {
-                    dispatch(authLogin({ user: currentUser })); // Fixed payload structure
+                    dispatch(authLogin({ userData: currentUser })); // Fixed payload structure
                     navigate("/");
                 }
             }

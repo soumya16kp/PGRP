@@ -5,8 +5,12 @@ from datetime import datetime, timezone
 from api.models import MunicipalityOfficial
 
 class ComplaintManager(models.Manager):
-    def ranked(self):
-        complaints = list(self.all())
+    def ranked(self, municipality_id=None):
+        queryset = self.all()
+        if municipality_id:
+            queryset = queryset.filter(municipality_id=municipality_id)
+        
+        complaints = list(queryset)
         complaints.sort(key=lambda c: c.score, reverse=True)
         return complaints
 class Complaint(models.Model):

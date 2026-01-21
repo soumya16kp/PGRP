@@ -264,7 +264,8 @@ class ComplaintViewSet(viewsets.ModelViewSet):
 class RankedComplaintListView(APIView):
 
     def get(self, request):
-        all_complaints = Complaint.objects.ranked()
+        municipality_id = request.query_params.get('municipality_id')
+        all_complaints = Complaint.objects.ranked(municipality_id=municipality_id)
         page = int(request.query_params.get('page', 1))
         per_page = 8
         start = (page - 1) * per_page
