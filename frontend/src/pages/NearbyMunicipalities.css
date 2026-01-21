@@ -446,3 +446,12 @@
     transform: rotate(360deg);
   }
 }
+
+/* Mobile Fixes */
+@media (max-width: 768px) {
+  .nearby-municipalities-scope .nm-loading-container.bg-glass-panel {
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    background: white !important;
+  }
+}

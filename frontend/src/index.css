@@ -24,3 +24,11 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+html,
+body {
+  height: 100%;
+  overflow-x: hidden;
+  /* Prevent horizontal scroll causing flicker */
+  width: 100%;
+}
